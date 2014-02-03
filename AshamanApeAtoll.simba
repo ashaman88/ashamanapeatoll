@@ -420,13 +420,13 @@ Begin
 
   If Not IsLoggedIn Then
   Begin
+    Wait(RandomRange(2000,3000));
     If Not Players[CurrentPlayer].Login Then
       TerminateScript;
     Wait(RandomRange(2000,3000));
     Minimap.ClickCompass;
     MainScreen.SetAngle(MS_ANGLE_HIGH);
     Wait(RandomRange(2000,3000));
-    Timeout.Reset;
     Timeout.Start;
     Result:=True;
   End;
@@ -439,15 +439,13 @@ Begin
       Writeln('MiniBreak');
       MouseOffClient(4);
       Wait(RandomRange(13000,85000));
-      Timeout.Reset;
       Timeout.Start;
-      MiniBreak.Reset;
       MiniBreak.Start;
       MiniBreakTime:=RandomRange(600000,2000000);
     End;
 
   If TimeoutFS Then
-    If Timeout.GetTime>300000 Then
+    If Timeout.GetTime>600000 Then
     Begin
       Writeln('Nothing has happened for too long, shutting down.');
       TerminateScript;
@@ -1462,7 +1460,7 @@ Begin
     TerminateScript;
   End;
 
-  Timeout.Reset;
+  Timeout.Start;
   MiniBreak.Start;
   MiniBreakTime:=RandomRange(600000,2000000);
 
