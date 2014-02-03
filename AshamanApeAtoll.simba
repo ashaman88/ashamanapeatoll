@@ -1,0 +1,1485 @@
+///////////////////////////////////////////////////////////////////////
+//                                                                   //
+//          READ THE DIRECTIONS IN THE OP FIRST OR ELSE              //
+//           Make sure you have setup your player file               //
+//                  Under SRL>PlayerManager                          //
+//                       Press Play                                  //
+//                                                                   //
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                       //
+//           Don't touch below this line unless you know what you're doing!!             //
+//                                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////
+Program AshamanApeAtoll;
+  {$IFDEF RAYMONDPOWNS}{wrappers} function FloodFillTPAWrap(const TPA: TPointArray): T2DPointArray; var tempATPA: T2DPointArray; begin tempATPA:= FloodFillTPA(TPA); Result:= tempATPA; SetLength(tempATPA, 0); end; function FindTPAEdges(const p: TPointArray): TPointArray; begin FindTPAEdgesWrap(p, result); end; Function RotatePoints(Const P: TPointArray; A, cx, cy: Extended): TPointArray; begin RotatePointsWrap(P, A, cx, cy, result); end; function TPAFromCircle(const CX, CY, Radius: Integer): TPointArray; begin TPAFromCircleWrap(CX, CY, Radius, result); end; function TPAFromEllipse(const CX, CY, XRadius, YRadius : Integer): TPointArray; begin TPAFromEllipseWrap(CX, CY, XRadius, YRadius, result); end; function TPAFromBox(const Box : TBox) : TPointArray; begin TPAFromBoxWrap(Box, result); end; Function ReturnPointsNotInTPA(Const TotalTPA: TPointArray; const Box: TBox): TPointArray; begin ReturnPointsNotInTPAWrap(TotalTPA, Box, result); end; function CombineIntArray(const Ar1, Ar2: TIntegerArray): TIntegerArray; begin CombineIntArrayWrap(Ar1, Ar2, result); end; function ReArrangeandShortenArray(const a: TPointArray; Dist: Integer): TPointArray; begin ReArrangeandShortenArrayWrap(a, Dist, result); end; function ReArrangeandShortenArrayEx(const a: TPointArray; w, h: Integer): TPointArray; begin ReArrangeandShortenArrayExWrap(a, w, h, result); end; function CombineTPA(const Ar1, Ar2: TPointArray): TPointArray; begin CombineTPAWrap(Ar1, Ar2, Result); end; function RemoveDistTPointArray(x, y, dist: Integer;const ThePoints: TPointArray; RemoveHigher: Boolean): TPointArray; begin RemoveDistTPointArrayWrap(x, y, dist, ThePoints, RemoveHigher, Result); end; function TPAFromText(const text, font: String; var w,h: Integer): TPointArray; begin TPAFromTextWrap(text, font, w, h, result); end; function GetColors(const Coords: TPointArray): TIntegerArray; begin GetColorsWrap(Coords, Result); end; function Explode(del, str: string): TStringArray; begin ExplodeWrap(del, str, Result); end; function MergeATPA(const ATPA : T2DPointArray): TPointArray; begin MergeATPAWrap(ATPA, Result); end; function SplitTPA(arr : TPointArray; dist : Integer) : T2DPointArray; begin SplitTPAWrap(arr, dist, result); end; function SplitTPAEx(arr : TPointArray; w, h : integer) : T2DPointArray; begin SplitTPAExWrap(Arr, w, h, result); end; function ClearTPAFromTPA(arP, ClearPoints : TPointArray) : TPointArray; begin ClearTPAFromTPAWrap(arP, ClearPoints, result); end; function TPAToATPAEx(arP : TPointArray; w, h : integer) : T2DPointArray; begin TPAtoATPAExWrap(arP, w, h, result); end; function TPAToATPA(arP : TPointArray; dist : Integer) : T2DPointArray; begin TPAtoATPAWrap(arP, dist, result); end; function FindGapsTPA(TPA : TPointArray; MinPixels : integer) : T2DPointArray; begin FindGapsTPAWrap(tpa, MinPixels, result); end; {$ENDIF}
+  {$Define SMART}
+  {$I SRL-6/SRL.Simba}
+  {$i srl-6/lib/misc/srlplayerform.simba}
+  {$I SPS/SPS-RS3.Simba}
+{
+AshamanApeAtoll v3.0
+-Can start anywhere in course
+-If you need food, try having only food items in inventory
+-Start with ninja greegree equipped
+-Fill out player details if you want to go past 6 hours!
+-Minimize the ability bar!
+-You must have set the top xp bar tracker to total or agility xp and it can't say 'lots'
+^^IF YOU DONT DO THAT STEP THE SCRIPT WILL TIMEOUT AFTER 5 MINUTES
+-PS ignore the dtm errors on script terminate, this is a mystery
+}
+
+///////////////////////////////////////////////////////////////////////
+//                                                                   //
+//                  Begin of user setup                              //
+//                Fill in the fields below                           //
+//                                                                   //
+///////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                       //
+//                            End of user setup                                          //
+//           Don't touch below this line unless you know what you're doing!!             //
+//                                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////
+
+Const
+  ScriptVersion = '2.1';
+  Debug = False;
+  POSDebug = False;
+
+  Area0X1 = 151;   //steppingstone
+  Area0Y1 = 135;
+  Area0X2 = 170;
+  Area0Y2 = 164;
+
+  Area1X1 = 140;
+  Area1Y1 = 135;     //before uptree
+  Area1X2 = 150;
+  Area1Y2 = 170;
+
+  Area2X1 = -10;
+  Area2Y1 = -10;
+  Area2X2 = 10;        //before monkeybars
+  Area2Y2 = 10;
+
+  Area3X1 = 118;
+  Area3Y1 = 155;    //aftermonkeybars
+  Area3X2 = 128;
+  Area3Y2 = 170;
+
+  Area4X1 = 90;
+  Area4Y1 = 158;    //after skulls
+  Area4X2 = 124;
+  Area4Y2 = 212;
+
+  Area5X1 = 125;
+  Area5Y1 = 190;    //beforeropeswing
+  Area5X2 = 145;
+  Area5Y2 = 215;
+
+  Area6X1 = 150;
+  Area6Y1 = 185;    //beforeropedown
+  Area6X2 = 175;
+  Area6Y2 = 213;
+
+  Area7X1 = 165;
+  Area7Y1 = 134;    //afterfinalobstacle
+  Area7X2 = 216;
+  Area7Y2 = 180;
+
+Var
+ XP,StartingExperience,TreeDTM: Integer;
+ BreakIn,BreakFor,LogDTM,AreaHigh: Integer;
+ W,X,Y,Z,RealBTime,BreakRounds,TotalBreaks,MiniBreakTime: Integer;
+ Area0,Area1,Area2,Area3,Area4,Area5,Area6,Area7: TBox;
+ XPH: Extended;
+ Areas: TBoxArray;
+ FunctionStop: String;
+ ExtraSafe,SwitchWorlds,TakeBreaks,MiniBreaks: Boolean;
+ Timeout,Timeout2,MiniBreak,CurrentBTime: TTimeMarker;
+
+Const
+  PrintSmarts  = True;    // ***Print proggy on smart? There may be a memory leak in the includes FYI***
+  DMP          = True;    // ***Auto grabs SPS map if not found - should keep true***
+
+  TimeoutFS    = True;    // ***If no XP gained in 5 minutes, terminate script?***
+  Bir          = 13;      // ***Random minutes to add/subtract from how long until we break***
+  Bfr          = 7;       // ***Random minutes to add/subjtract from break duraction***
+
+procedure declarePlayers();
+var
+  i,j: integer;
+begin
+  players.setup(playerForm.playerNames, playerForm.playerFile); // load the SPF players from the SRL Player Manager
+  currentPlayer := 0;                                           // player to use first
+
+  // set player attributes based on the settings from the form
+  for i := 0 to high(players) do
+    with players[i] do
+    begin
+      // convert the integers
+      IsMember:=True;
+      World := strToInt(playerForm.players[i].settings[0]);  //world
+      BreakIn := strToInt(playerForm.players[i].settings[1]);  //minutes until break
+      BreakFor := strToInt(playerForm.players[i].settings[2]);  //minutes to break
+
+
+      // booleans
+      TakeBreaks := strToBool(playerForm.players[i].settings[3]);    //take breaks
+      MiniBreaks := strToBool(playerForm.players[i].settings[5]);    //take breaks
+      SwitchWorlds := strToBool(playerForm.players[i].settings[4]);    //find spirits
+      FindMod := strToBool(playerForm.players[i].settings[6]);        //logmod
+
+      // any other data types you've decided to use
+      strings[0] := playerForm.players[i].settings[7]; //quickkey
+    end;
+end;
+
+// initiates the SRL player form (you aren't restricted to the procedure name; it can be whatever you want)
+procedure initPlayerForm();
+begin
+  with playerForm do
+  begin
+    name := 'AshamanApeAtoll v'+toStr(ScriptVersion); // the title of the SPF, usually the name of your script
+    scriptHelpThread := '';           // a link to a help thread, if set to '' will link to my setup guide
+    scriptSettingsPath := '';         // where you want the settings file to be saved; saved in script's path by default
+
+    editBoxLabels := ['World', 'Minutes until Break', '# of Minutes to Break']; // edit boxes are created for each array element
+    editBoxDefaults := [ '0', '600', '15'];                                             // optional default values for each edit box; array length must equal editBoxLabel length
+    checkBoxLabels := ['Take Breaks','Switch Worlds (After Break)', 'MiniBreaks', 'Logout if Mod is near'];        // same as editBoxLabels but for check boxes
+    checkBoxDefaults := ['True','True','True','True'];
+
+    comboBoxLabels := ['GraphicsMode'];                                                // same as editBoxLabels but for combo boxes (drop down boxes)
+    comboBoxDefaults := ['DirectX'];
+
+    // this needs to be done for every element in the comboBoxLabels array
+    setLength(comboBoxItems, length(comboBoxLabels));
+    comboBoxItems[0] := ['OpenGL', 'DirectX'];
+  end;
+end;
+
+
+{*******************************************************************************
+Function AutoupdateMe;
+By: Shuttleu
+Edited By: Ashaman88
+Description: Autoupdates Script.
+*******************************************************************************}
+Procedure AutoUpdateMe;
+Var
+  Neifile: Integer;
+  OnlineVersion, NewScript, NeiFeilNennen: String;
+Begin
+  Writeln('Checking for script updates...');
+  OnlineVersion := GetPage('http://ashamanapeatoll.googlecode.com/git/Version.txt');
+  Writeln(OnlineVersion);
+  Writeln(ScriptVersion)
+  If (trim(OnlineVersion) > ScriptVersion) Then
+  Begin
+    WriteLn('Newer script version online!');
+    WriteLn('Autoupdating to newer version.');
+    NewScript := GetPage('http://ashamanapeatoll.googlecode.com/git/AshamanApeAtoll.simba');
+    NeiFeilNennen := ScriptPath+ 'AshamanApeAtoll V'+OnlineVersion+'.simba';
+    Neifile := Rewritefile(NeiFeilNennen, true);
+    Try
+      WriteFileString(Neifile, NewScript);
+    Except
+      Begin
+        WriteLn('Fatal error writing to '+NeiFeilNennen+'!!');
+        Terminatescript;
+      End;
+    End;
+    CloseFile(Neifile);
+    WriteLn('New script downloaded to '+NeiFeilNennen+'!! Please use this one!!');
+    TerminateScript;
+  End Else
+    WriteLn('You have the latest version of the script!');
+End;
+
+function TRSChatBox.getXP: Integer;
+var
+  b: TBox;
+  s: String;
+  tpa : TPointArray;
+  atpa : T2DPointArray;
+  i,cts,p: Integer;
+begin
+  b := self.getBounds();
+  b.edit(+(b.x2-b.x1)-140, +10, -5, -94);
+
+  findColorsTolerance(tpa, 14013909, b, 4,colorSetting(2, 0.00, 0.00));
+
+  if length(tpa) < 2 then
+  begin
+    print('chatBox.getXP(): No XP found', TDebug.SUB);
+    Exit;
+  end;
+
+  atpa := tpa.cluster(10);
+  atpa.sortFromFirstPoint(point(b.x2,b.y2));
+
+  b:= atpa[low(atpa)].getbounds;
+  b.edit(-2,-2,+2,+3);
+
+  s:=Replace(tesseractgettext(b.x1,b.y1,b.x2,b.y2, FILTER_SMALL_CHARS), ' ', '', [rfReplaceAll]);
+
+  P := Pos('x', S);
+  if P > 0 then
+    Result := StrToIntDef(ExtractFromStr(Copy(s, P, Length(S)), Numbers), 0)
+  else
+    Result := StrToIntDef(ExtractFromStr(S, Numbers), 0);
+
+  print('chatBox.getXP(): XP found: ' + tostr(result), TDebug.SUB);
+end;
+
+Procedure SetDTM;
+Begin
+  Area0:=IntToBox(Area0X1,Area0Y1,Area0X2,Area0Y2);
+  Area1:=IntToBox(Area1X1,Area1Y1,Area1X2,Area1Y2);
+  Area2:=IntToBox(Area2X1,Area2Y1,Area2X2,Area2Y2);
+  Area3:=IntToBox(Area3X1,Area3Y1,Area3X2,Area3Y2);
+  Area4:=IntToBox(Area4X1,Area4Y1,Area4X2,Area4Y2);
+  Area5:=IntToBox(Area5X1,Area5Y1,Area5X2,Area5Y2);
+  Area6:=IntToBox(Area6X1,Area6Y1,Area6X2,Area6Y2);
+  Area7:=IntToBox(Area7X1,Area7Y1,Area7X2,Area7Y2);
+  Areas:=[Area0,Area1,Area2,Area3,Area4,Area5,Area6,Area7];
+  AreaHigh:=High(Areas);
+
+  W := (BreakIn * 60000);
+  X := (BreakFor * 60000);
+  Y := RandomRange(-BIR * 60000, BIR * 60000);
+  Z := RandomRange(-BFR * 60000, BFR * 60000);
+
+  LogDTM := DTMFromString('mggAAAHicY2NgYHAF4kAo9gNieyB2AuJlQDwPiJcA8SooewMQd03UZeifpsfw4fUchv//Whm+fSoC0vUM/EA5bJgRB4YAAG7nEmc=');
+  TreeDTM := DTMFromString('mggAAAHicY2NgYJBkYmBQAWIZIP7HyMDwF4gZgOw0IF0OxO1AXArEGUDcCMT+q5QYQjerMETsVmVY1e7KsLnPk2HbBE8GfqA2bJgRB4YAADX5DZs=');
+End;
+
+Procedure F33DTM;
+Begin
+  FreeDTM(LogDTM);
+  FreeDTM(TreeDTM);
+End;
+
+Function FindNormalRandoms: Boolean;
+Begin
+  Result:= ExitSquealOfFortune Or ClaimSpinTicket;
+End;
+
+Function GrabMaps: Boolean;
+var
+  Map: String;    //Map Locations
+  Name: String;      //Map Names
+  SPSFile: LongInt;
+begin
+  Name:= IncludePath + 'SPS\img\runescape_surface\0_0APE.png';
+  Map:= 'http://imageshack.com/a/img802/9954/p46i.png';
+  begin
+    if (Not FileExists(Name)) then
+    begin
+      writeln('No file, downloading');
+      SPSFile:=CreateFile(Name);
+      CloseFile(SPSFile);
+      SPSFile:= RewriteFile(Name, False);
+      WriteFileString(SPSFile, GetPage(Map));
+      CloseFile(SPSFile);
+    end;
+  end;
+  Result:= (FileExists(IncludePath + 'SPS\img\runescape_surface\0_0APE.png'));
+end;
+
+Procedure RequirementsCheck;
+begin
+  If (Not GrabMaps) then
+    RaiseException(erCustomError, 'SPS Maps Do Not Exist OR They Are Named Incorrectly!');
+end;
+
+Function BreakHandler(BreakIn, BreakFor, randBreakIn, randBreakFor: Integer): Boolean;
+Var
+  H,M,S: Integer;
+Begin
+  If Not IsLoggedIn Then
+    Exit;
+
+  If (GetTimeRunning < ((W) + (Y) + BreakRounds)) Then
+    Exit Else
+    If (GetTimeRunning > ((W) + (Y) + BreakRounds)) Then
+    Begin
+      RealBTime := Round((X+Z)/60000);
+      Writeln('Taking a break for about ' + IntToStr(RealBTime) + ' minutes.');
+      Players[CurrentPlayer].Logout;
+      CurrentBTime.Start;
+      Repeat
+        Wait(21000);
+        ConvertTime((X+Z)-CurrentBTime.GetTime,H,M,S);
+        Writeln('Breaktime left: '+IntToStr(H)+':'+IntToStr(M)+':'+IntToStr(S));
+      Until(CurrentBTime.GetTime>(X+Z));
+      Writeln('Logging in.');
+      Players[CurrentPlayer].Login;
+      Wait(4000);
+      Timeout.Start;
+      Timeout2.Start;
+      Result := IsLoggedIn;
+      Minimap.ClickCompass;
+      MainScreen.SetAngle(MS_ANGLE_HIGH);
+      IncEx(BreakRounds, (W) + (X));
+      Inc(TotalBreaks);
+      Writeln('The next break will occur in about ' + IntToStr(BreakIn) + ' minutes.');
+      W := (BreakIn * 60000);
+      X := (BreakFor * 60000);
+      Y := RandomRange(-BIR * 60000, BIR * 60000);
+      Z := RandomRange(-BFR * 60000, BFR * 60000);
+    End;
+End;
+
+{Procedure PrintSmart;
+Begin
+  SMARTImage.Clear;
+  SMART_DrawText(30,252,StatChars, '========AshamanApeAtoll=========', 65280);
+  SMART_DrawText(30,264,StatChars, '==========Version: '+ScriptVersion+'===========', 65280);
+  SMART_DrawText(30,275,StatChars, 'Time Running: ' + TimeRunning, 65280);
+  SMART_DrawText(30,288,StatChars, 'Experience Earned: ' + ToStr(XP), 65280);
+  SMART_DrawText(30,302,StatChars, 'Experience/Hour: ' + ToStr(XPH), 65280);
+  SMART_DrawText(30,314,StatChars, '==============================', 65280);
+End;    }
+
+Procedure ProgressReport;
+Var
+  TTB: Integer;
+Begin
+  If (Not Debug) And (Not POSDebug) Then
+    ClearDebug;
+
+  TTB := (((W) + (Y) + BreakRounds)-GetTimeRunning);
+
+  XP := (ChatBox.GetXP - StartingExperience);
+  XPH := Round(XP * (3600.0 / (GetTimeRunning / 1000.0)));
+  Timeout.Start;
+
+  writeln('|=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|');
+  writeln('|                  AshamanApeAtoll v'+PadR(toStr(ScriptVersion), 24), '|');
+  writeln('|=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=|');
+  writeln(PadR('| Running For: '+TimeRunning, 60)+'|');
+  writeln(PadR('| Exp Earned: ' + GroupDigits(XP,','), 40) + padR('Exp/Hour: ' + GroupDigits(XPH,','), 20) + '|');
+  writeln('|___________________________________________________________|');
+  writeln('|___________________________________________________________|');
+
+  If TakeBreaks Then
+    Writeln('Time until break: '+MsToTime(TTB, Time_Bare));
+
+
+
+
+ { If PrintSmarts Then
+    PrintSmart;}
+End;
+
+Function CheckStuff: Boolean;
+Begin
+  Result:=False;
+
+  If Not IsLoggedIn Then
+  Begin
+    If Not Players[CurrentPlayer].Login Then
+      TerminateScript;
+    Wait(RandomRange(2000,3000));
+    Minimap.ClickCompass;
+    MainScreen.SetAngle(MS_ANGLE_HIGH);
+    Wait(RandomRange(2000,3000));
+    Timeout.Reset;
+    Timeout.Start;
+    Result:=True;
+  End;
+
+  FindNormalRandoms;
+
+  If MiniBreaks Then
+    If MiniBreak.GetTime>MiniBreakTime Then
+    Begin
+      Writeln('MiniBreak');
+      MouseOffClient(4);
+      Wait(RandomRange(13000,85000));
+      Timeout.Reset;
+      Timeout.Start;
+      MiniBreak.Reset;
+      MiniBreak.Start;
+      MiniBreakTime:=RandomRange(600000,2000000);
+    End;
+
+  If TimeoutFS Then
+    If Timeout.GetTime>300000 Then
+    Begin
+      Writeln('Nothing has happened for too long, shutting down.');
+      TerminateScript;
+    End;
+End;
+
+Function WalkToStart: Boolean; Forward;
+
+Function WhereAmI: Integer;
+Var
+  I: Integer;
+  Location: TPoint;
+Begin
+  FunctionStop:= 'WhereAmI: Entered';
+  SmartImage.Clear;
+
+  Result := -1;
+  Location := SPS.GetPlayerPos;
+
+  If POSDebug Then
+  Begin
+    SPS.DebugPlayerPOS;
+    Wait(1000);
+  End;
+
+  Print('SPS Point: '+ToStr(Location));
+
+  For I := 0 To AreaHigh Do
+    If PointInBox(Location, Areas[I]) Then
+    Begin
+      Result := I;
+      Break;
+    End;
+
+  If (Result=-1) Then
+    Print('WARNING DONT KNOW WHERE YOU ARE!');
+
+  Print('We are at position: '+ToStr(I));
+
+  FunctionStop:= 'WhereAmI: Finished';
+End;
+
+Procedure FailSafe;
+Begin
+  If Debug Then
+    Writeln('Misclicked, doing failsafe');
+  Mouse(Point(289+GaussRangeInt(-10,10),203+GaussRangeInt(-10,10)),Mouse_Left,Mouse_Human);
+
+  Wait(RandomRange(400,500));
+
+  Repeat
+    Wait(100);
+  Until (Not(Minimap.IsPlayerMoving));
+End;
+
+Function Healing: Boolean;
+Var
+  I: Integer;
+  T: TTimeMarker;
+Begin
+  If Debug Then
+    FunctionStop:= 'Healing: Entered';
+
+  Result:=False;
+  CheckStuff;
+
+  If ((ActionBar.GetHPPercent < (50))) Then
+  Begin
+    If ActionBar.GetHPPercent=-1 Then
+      Exit;
+    If Debug Then
+      Writeln('HP Low '+ToStr(ActionBar.GetHPPercent)+' eating food');
+    If Debug Then
+      Writeln('HP Threshold '+ToStr((50)));              //Method
+
+    For I:=1 To 28 Do
+    Begin
+      If (ActionBar.GetHPPercent > (50)) Then
+        Exit;
+      If TabBackpack.IsItemInSlot(I) Then
+      Begin
+        TabBackpack.MouseSlot(I,Mouse_Move);
+        If IsMouseOverText(['Eat','at']) Then
+        Begin
+          FastClick(Mouse_Left);
+          Wait(RandomRange(2500,4500));
+          If (ActionBar.GetHPPercent > (50)) Then
+            Exit;
+        End Else
+          Writeln(GetMouseOverText);
+      End;
+    End;
+
+    If Debug Then
+        Writeln('No more food, manually waiting to heal');
+    T.Start;
+    Repeat
+      Wait(RandomRange(20000,40000));
+      MouseMovingObject;                                                 //Method
+      CheckStuff;
+      Timeout.Reset;
+      Timeout.Start;
+    Until((ActionBar.GetHPPercent > (50)));
+
+    If Debug Then
+      Writeln('All healed');
+
+    Timeout.Reset;
+    Timeout.Start;
+    Result := True
+  End;
+  If Debug Then
+    FunctionStop:= 'Healing: finished';
+End;
+
+Function FixPosition(WhereFrom: Integer): Boolean;
+Begin
+  If Debug Then
+    FunctionStop:= 'FixPosition: Entered';
+
+  Result:=False;
+
+  CheckStuff;
+
+  If Not IsLoggedIn Then
+    Exit;
+
+  Case WhereFrom Of
+    0:        //lowerlevel
+    Begin
+      If WhereAmI<>0 Then
+      Begin
+        Writeln('Off of spot, correcting');
+        Writeln('Off coordinates: '+ToStr(SPS.GetPlayerPOS));
+        SPS.WalkToPos(Point(130,126));
+        Result:=True;
+      End;
+    End;
+    5:    //before swing
+    Begin
+      If WhereAmI<>5 Then
+      Begin
+        If Debug Then
+        Begin
+          Writeln('Off of spot, correcting');
+          Writeln('Off coordinates: '+ToStr(SPS.GetPlayerPOS));
+        End;
+        SPS.WalkToPos(Point(118,160));
+        Result:=True;
+      End;
+    End;
+  End;
+
+  If Debug Then
+    FunctionStop:= 'FixPosition: Finished';
+End;
+
+Function SwingRope:Boolean; Forward;
+
+Function WalkToRope:Boolean;
+Var
+  T: TTimeMarker;
+Begin
+  Result := False;
+
+  CheckStuff;
+
+  If Not IsLoggedIn Then
+    Exit;
+
+  If Debug Then
+    Writeln('Walking to rope');
+
+  If SPS.BlindWalk(Point(140,204)) Then
+  Begin
+    SwingRope;
+    Result:=True;
+  End;
+End;
+
+Function SteppingStone:Boolean;
+Var
+  H,I,X,Y: Integer;
+  T: TTimeMarker;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+Begin
+  Result := False;
+
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  Healing;
+
+  If Timeout.GetTime>20000 Then
+    FixPosition(0);
+
+  If ExtraSafe Then
+    If (WhereAmI<>0) Then
+    Begin
+      If Debug Then
+        Writeln('Not at spot 0, automatic true');
+      Exit(True);
+    End;
+
+  If XP < (ChatBox.GetXP - StartingExperience) Then
+  Begin
+    XP:=(ChatBox.GetXP - StartingExperience);
+    Timeout.Reset;
+  End;
+
+  Print('Looking for Stepping stone');
+
+  If (IsMouseOverText(['Jump','-to','pping','tone','ping','tepp'],10)) Then
+  Begin
+    Print('Found stone guessclick, clicking');
+    If DidClick(False) Then
+    Begin
+      FailSafe;
+      Exit;
+    End;
+    T.Start;
+    Repeat
+      If T.GetTime>6000 Then
+        Break;
+      Wait(Random(100));
+    Until (XP < (ChatBox.GetXP - StartingExperience));
+    Exit(True);
+  End;
+
+  findColorsTolerance(tpa, 1727336, Mainscreen.GetBounds, 6,colorSetting(2,0.04,1.22)); //stone
+
+  ATPA := TPA.Cluster(5);
+  ATPA.FilterBetween(150,10000);
+  ATPA.SortBySize;
+
+  SetLength(TPA,0);
+
+  If (Length(ATPA) <> 0) Then
+  Begin
+    H := High(ATPA);
+
+    For I := 0 To Min(H,5) Do
+    Begin
+      Print('Stone length: '+ToStr(Length(ATPA[I])));
+      SmartImage.DebugTPA(ATPA[I]);
+
+      MiddleTPAEx(ATPA[I],X,Y);
+
+      Mouse(X,Y,GaussRangeInt(-2,2),GaussRangeInt(-2,2));
+
+      If (IsMouseOverText(['Jump','-to','pping','tone','ping','tepp'])) Then
+      Begin
+        Print('Found stone TPA, clicking');
+        If DidClick(False) Then
+        Begin
+          FailSafe;
+          SetLength(ATPA,0);
+          Exit;
+        End;
+        SmartImage.Clear;
+        T.Start;
+        Repeat
+          If T.GetTime>6000 Then
+            Break;
+          Wait(Random(100));
+        Until (XP < (ChatBox.GetXP - StartingExperience));
+        SetLength(ATPA,0);
+        Exit(True);
+      End;
+    End;
+  End Else
+    Print('No steppingstone colors found');
+  SetLength(ATPA,0);
+End;
+
+Function MonkeyBars:Boolean; Forward;
+
+Function UpTree:Boolean;
+Var
+  H,I,X,Y: Integer;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+  B: Tbox;
+  T: TTimeMarker;
+Begin
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  Healing;
+
+  If ExtraSafe Then
+    If (WhereAmI<>1) Then
+    Begin
+      Print('Not at spot 1, automatic true');
+      Exit(True);
+    End;
+
+  If XP < (ChatBox.GetXP - StartingExperience) Then
+  Begin
+    XP:=(ChatBox.GetXP - StartingExperience);
+    Timeout.Reset;
+  End;
+
+  Print('Looking for tree to climb up');
+
+  MouseBox([251,196,260,219]);
+  SmartImage.DrawBox(IntToBox(251,196,260,219));
+  If IsMouseOverText(['limb','ropi','ropi','ical','tree']) Then
+  Begin
+    Print('Found tree guess click');
+    If DidClick(False) Then
+    Begin
+      FailSafe;
+      Exit;
+    End;
+    SmartImage.Clear;
+    Mouse(270,200,4,4);
+    T.Start;
+    Repeat
+      If T.GetTime>6000 Then
+      Begin
+        Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+        Break;
+      End;
+      Wait(Random(100));
+    Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
+    Wait(RandomRange(300,400));
+    If Not ExtraSafe Then
+      If (CountColorTolerance(459779,Minimap.GetBounds,10)>10000) Then
+        MonkeyBars;
+    Exit(True);
+  End;
+
+  B:=Mainscreen.GetBounds;
+  B.Edit(+200,+185,-100,-100);
+  findColorsTolerance(tpa, 5679324, B, 8,colorSetting(2,0.09,2.36)); //stone
+
+  ATPA := TPA.Cluster(5);
+  ATPA.SortBySize;
+
+  SetLength(TPA,0);
+
+  SmartImage.DebugATPA(ATPA);
+
+  If (Length(ATPA) = 0) Then
+  Begin
+    Print('No tree colors found');
+    SetLength(ATPA,0);
+    Exit;
+  End;
+
+  H := High(ATPA);
+
+  For I := 0 To Min(H,2) Do
+  Begin
+    MiddleTPAEx(ATPA[I],X,Y);
+
+    Mouse(X,Y,GaussRangeInt(-2,2),GaussRangeInt(-4,4));
+
+    If (IsMouseOverText(['limb','ropi','ropi','ical','tree'])) Then
+    Begin
+      Print('Found tree TPA, clicking');
+      If DidClick(False) Then
+      Begin
+        FailSafe;
+        SetLength(ATPA,0);
+        Exit;
+      End;
+      SmartImage.Clear;
+   //   HumanMouseBox(237,234-50,239,246-50);
+      T.Start;
+      Repeat
+        If T.GetTime>6000 Then
+        Begin
+          Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+          Break;
+        End;
+        Wait(Random(100));
+      Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
+      Wait(RandomRange(300,400));
+      If Not ExtraSafe Then
+        If (CountColorTolerance(459779,Minimap.GetBounds,10)>10000) Then
+          MonkeyBars;
+      SetLength(ATPA,0);
+      Exit(True);
+    End;
+  End;
+  SetLength(ATPA,0);
+End;
+
+Function Skulls:Boolean;
+Var
+  H,I,CTS,X,Y: Integer;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+  T: TTimeMarker;
+  B: TBox;
+Begin
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  Healing;
+
+  If ExtraSafe Then
+    If (WhereAmI<>3) Then
+    Begin
+      Print('Not at spot 3, automatic true');
+      Exit(True);
+    End;
+
+  If XP < (ChatBox.GetXP - StartingExperience) Then
+  Begin
+    XP:=(ChatBox.GetXP - StartingExperience);
+    Timeout.Reset;
+  End;
+
+  Print('Looking for skulls');
+
+  B:=Mainscreen.GetBounds;
+  B.Edit(+50,+50,-285,-100);
+  findColorsTolerance(tpa, 3044483, B, 8,colorSetting(2,0.04,0.78)); //skulls
+
+  ATPA := TPA.ToATPA(1);
+  ATPA.SortFromFirstPoint(Mainscreen.PlayerPoint);
+
+  SetLength(TPA,0);
+
+  If Not (Length(ATPA) = 0) Then
+  Begin
+    H := High(ATPA);
+
+    For I := 0 To Min(H,3) Do
+    Begin
+      SmartImage.DebugTPA(ATPA[I]);
+      MiddleTPAEx(ATPA[I],X,Y);
+
+      Mouse(X,Y,1,1);
+
+      If (IsMouseOverText(['kull','Skul','kul','slope','slop','lope'])) Then
+      Begin
+        Print('Found skulls tpa, clicking');
+
+        If DidClick(false) Then
+          Exit;
+
+        T.Start;
+        Repeat
+          If T.GetTime>8000 Then
+            Break;
+          Wait(Random(100));
+        Until (WhereAmI<>3);
+        Print('Out of area 3, looking for logdtm');
+        Mouse(721,139,8,8);
+        Wait(RandomRange(700,900));
+        T.Start;
+        Repeat
+          If T.GetTime>8000 Then
+            Break;
+          If ExtraSafe Then
+            If (WhereAmI=3) Then
+            Begin
+              Print('Failed obstacle');
+              Exit;
+            End;
+          Wait(Random(100));
+        Until (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds));
+        Wait(RandomRange(800,900));
+        Print('Found logdtm');
+        If Not ExtraSafe Then
+          If (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds)) Then
+          Begin
+            If Not IsLoggedIn Then
+              Exit;
+            Wait(RandomRange(600,800));
+            WalkToRope;
+          End;
+        Exit(True);
+      End;
+    End;
+  End Else
+    Print('No skull colors found');
+
+  Mouse(270,202,1,1);
+  If IsMouseOverText(['kull','Skul','kul','slope','slop','lope']) Then
+  Begin
+    Print('Found skull, guess click');
+    If DidClick(False) Then
+      Exit;
+    T.Start;
+    Repeat
+      If T.GetTime>8000 Then
+        Break;
+      Wait(Random(100));
+    Until (WhereAmI<>3);
+    Print('Out of area 3, looking for logdtm');
+   // HumanMMouse(664,173-50,8,8);
+    Wait(RandomRange(700,900));
+    T.Start;
+    Repeat
+      If T.GetTime>8000 Then
+        Break;
+      If ExtraSafe Then
+        If (WhereAmI=3) Then
+        Begin
+          Print('Failed obstacle');
+          Exit;
+        End;
+      Wait(Random(100));
+    Until (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds));
+    Print('Found logdtm');
+    If Not ExtraSafe Then
+      If (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds)) Then
+      Begin
+        If Not IsLoggedIn Then
+          Exit;
+        Wait(RandomRange(600,700));
+        WalkToRope;
+      End;
+    Exit(True);
+  End;
+End;
+
+
+Function MonkeyBars:Boolean;
+Var
+  H,I,CTS,X,Y: Integer;
+  MonkeyBox: TBox;
+  T: TTimeMarker;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+Begin
+  Result:=False;
+
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  Healing;
+
+  If ExtraSafe Then
+    If (WhereAmI<>2) Then
+    Begin
+      Print('Not at spot 2, automatic true');
+      Exit(True);
+    End;
+
+  If XP < (ChatBox.GetXP - StartingExperience) Then
+  Begin
+    XP:=(ChatBox.GetXP - StartingExperience);
+    Timeout.Reset;
+  End;
+
+  Print('Looking for monkeybars');
+
+  findColorsTolerance(tpa, 6265274, Mainscreen.GetBounds, 6,colorSetting(2,0.02,1.38)); //monkeybar
+
+  ATPA := TPA.Cluster(25);
+  ATPA.SortBySize;
+
+  SetLength(TPA,0);
+
+
+
+  If Not (Length(ATPA) = 0) Then
+  Begin
+    H := High(ATPA);
+
+    For I := 0 To 0 Do
+    Begin
+      SmartImage.DebugTPA(ATPA[I]);
+      MonkeyBox:=GetTPABounds(ATPA[I]);
+      MiddleTPAEx(ATPA[I],X,Y);
+
+      Mouse(MonkeyBox.X2-62,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
+
+      If (IsMouseOverText(['wing','cross','ross','onke','ybars','bars'])) Then
+      Begin
+        Print('Found bars TPA, clicking');
+        If Not DidClick(True) Then
+        Begin
+          FailSafe;
+          SetLength(ATPA,0);
+          Exit;
+        End;
+
+        Mouse(270,199,2,2);
+        SmartImage.Clear;
+        T.Start;
+        Repeat
+          If T.GetTime>9000 Then
+          Begin
+            Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+            Break;
+          End;
+          Wait(Random(100));
+        Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+        Wait(RandomRange(300,400));
+        If Not ExtraSafe Then
+          If (CountColorTolerance(459779,Minimap.GetBounds,10)<10000) Then
+            Skulls;
+        SetLength(ATPA,0);
+        Exit(False);
+      End;
+    End;
+  End Else
+    Print('No monkeybar colors found');
+
+  SetLength(ATPA,0);
+
+  MouseBox([266,199,268,219]);
+  Wait(Random(200));
+  If IsMouseOverText(['wing','cross','ross','onke','ybars','bars']) Then
+  Begin
+    Print('Found monkeybars, guess clicking');
+
+    If DidClick(False) Then
+    Begin
+      FailSafe;
+      Exit;
+    End;
+
+  //  HumanMMouse(241,228-50,1,1);
+    T.Start;
+    Repeat
+      If T.GetTime>9000 Then
+      Begin
+        Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+        Break;
+      End;
+      Wait(Random(100));
+    Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+    Wait(RandomRange(300,400));
+    If Not ExtraSafe Then
+      If (CountColorTolerance(459779,Minimap.GetBounds,10)<10000) Then
+        Skulls;
+    Exit(True);
+  End;
+End;
+
+
+Function WaterBox: TBox;
+Var
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+Begin
+  findColorsTolerance(tpa, 8612938, Mainscreen.GetBounds, 6,colorSetting(2,0.69,1.87)); //water
+  ATPA := TPA.Cluster(25);
+  ATPA.SortBySize;
+
+  SetLength(TPA,0);
+
+  SmartImage.DebugATPA(ATPA);
+
+  Result:= ATPA[0].GetBounds;
+End;
+
+Function SwingRope:Boolean;
+Var
+  H,I,CTS,X,Y: Integer;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+  T: TTimeMarker;
+Begin
+  Result := False;
+  MouseSpeed := RandomRange(18,20);
+
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  Healing;
+
+  If Timeout.GetTime>20000 Then
+  Begin
+    FixPosition(5);
+  End;
+
+  If ExtraSafe Then
+    If (WhereAmI<>5) Then
+    Begin
+      Result:=True;
+      If Debug Then
+        Writeln('Not at spot 5, automatic true');
+      Exit;
+    End;
+
+  If XP < (ChatBox.GetXP - StartingExperience) Then
+  Begin
+    XP:=(ChatBox.GetXP - StartingExperience);
+    Timeout.Reset;
+  End;
+
+  If Timeout.GetTime>20000 Then
+    FixPosition(5);
+
+  Print('Looking for rope');
+
+  If IsMouseOverText(['Swing','wing','Rope','ope'],10) Then
+  Begin
+    Print('Found rope, clicking');
+    If DidClick(False) Then
+    Begin
+      FailSafe;
+      Exit;
+    End;
+    SmartImage.Clear;
+
+    Mouse(309,109,10,10);
+
+    T.Start;
+    Repeat
+      If T.GetTime>6000 Then
+        Break;
+      Wait(Random(100));
+    Until (FindDTM(TreeDTM,X,Y,Mainscreen.GetBounds));
+
+    Print('Found treedtm');
+    Exit(True);
+  End;
+
+  findColorsTolerance(tpa, 2125146, WaterBox, 10,colorSetting(2,0.02,1.54)); //green
+  ATPA := TPA.Cluster(5);
+  ATPA.FilterBetween(0,25);
+  ATPA.SortFromFirstPoint(Mainscreen.PlayerPoint);
+
+  SetLength(TPA,0);
+
+  If (Length(ATPA) = 0) Then
+  Begin
+    Print('No plant colors found');
+    Exit;
+  End;
+
+  H := High(ATPA);
+
+  For I := 0 To H Do
+  Begin
+    SmartImage.DebugTPA(ATPA[I]);
+    MiddleTPAEx(ATPA[I],X,Y);
+
+    Mouse(X,Y,GaussRangeInt(-2,2),GaussRangeInt(-3,15));
+
+    If (IsMouseOverText(['Swing','wing','Rope','ope'])) Then
+    Begin
+      Print('Found rope TPA, clicking');
+      If DidClick(False) Then
+      Begin
+        FailSafe;
+        SetLength(ATPA,0);
+        Exit;
+      End;
+      SmartImage.Clear;
+   //   HumanMMouse(290,112-50,10,10);
+
+      Print('Out of area 5, looking for treedtm');
+
+      T.Start;
+      Repeat
+        If T.GetTime>6000 Then
+          Break;
+        Wait(Random(100));
+      Until (FindDTM(TreeDTM,X,Y,Mainscreen.GetBounds));
+
+      Print('Found treedtm');
+      SetLength(ATPA,0);
+      Exit(True);
+    End;
+  End;
+End;
+
+Function DownTree:Boolean;
+Var
+  H,I,CTS,X,Y: Integer;
+  TPA: TPointArray;
+  ATPA: T2DPointArray;
+  T: TTimeMarker;
+Begin
+  Wait(RandomRange(300,400));
+
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  Healing;
+
+  If ExtraSafe Then
+    If (WhereAmI<>6) Then
+    Begin
+      Print('Not at spot 6, automatic true');
+      Exit(True);
+    End;
+
+  If XP < (ChatBox.GetXP - StartingExperience) Then
+  Begin
+    XP:=(ChatBox.GetXP - StartingExperience);
+    Timeout.Reset;
+  End;
+
+  Print('Looking for tree to climb down');
+
+  MouseBox([316,109,326,122]);
+  If IsMouseOverText(['down','-dow','opic','tree','ical','ropi']) Then
+  Begin
+    Print('Found tree down, guessing');
+    If DidClick(False) Then
+    Begin
+      FailSafe;
+      Exit;
+    End;
+    T.Start;
+    Repeat
+      If T.GetTime>6000 Then
+      Begin
+        Print('Took too long for black MM to show up');
+        Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+        Break;
+      End;
+      Wait(Random(100));
+    Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
+    Print('Black MM is up');
+    Wait(RandomRange(1500,2200));
+    Mouse(620,120,6,6);
+    T.Start;
+    Repeat
+      If T.GetTime>10000 Then
+      Begin
+        Print('Black MM still isnt gone');
+        Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+        Break;
+      End;
+      Wait(Random(100));
+      If Not IsLoggedIn Then
+        Exit;
+    Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+    ProgressReport;
+    Wait(RandomRange(300,500));
+    WalkToStart;
+    Exit(True);
+  End;
+
+  findColorsTolerance(tpa, 2124645, Mainscreen.GetBounds, 4,colorSetting(2,0.04,0.17)); //green
+  ATPA := TPA.Cluster(5);
+  ATPA.SortFromFirstPoint(Point(319,126));
+
+  SetLength(TPA,0);
+
+  If (Length(ATPA) = 0) Then
+    Print('No zipline colors found');
+
+  H := High(ATPA);
+
+  For I := 0 To Min(H,2) Do
+  Begin
+    SmartImage.DebugTPA(ATPA[I]);
+    MiddleTPAEx(ATPA[I],X,Y);
+
+    Mouse(X,Y,GaussRangeInt(-2,2),GaussRangeInt(-2,2));
+
+    If (IsMouseOverText(['down','-dow','opic','tree','ical','ropi'])) Then
+    Begin
+      Print('Found downtree, clicking');
+
+      If DidClick(False) Then
+      Begin
+        FailSafe;
+        SetLength(ATPA,0);
+        Exit;
+      End;
+      SmartImage.Clear;
+      T.Start;
+      Repeat
+        If T.GetTime>6000 Then
+        Begin
+          If Debug Then
+            Writeln('Took too long for black MM to show up');
+          Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+          SetLength(ATPA,0);
+          Break;
+        End;
+        Wait(Random(100));
+      Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
+      Wait(RandomRange(1800,2200));
+ //     HumanMMouse(566,154-50,6,6);
+      T.Start;
+      Repeat
+        If T.GetTime>10000 Then
+        Begin
+          If Debug Then
+            Writeln('Black MM still isnt gone');
+          Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+          SetLength(ATPA,0);
+          Break;
+        End;
+        Wait(Random(100));
+      Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+      ProgressReport;
+      Wait(RandomRange(300,500));
+      If Not IsLoggedIn Then
+        Exit;
+      WalkToStart;
+      SetLength(ATPA,0);
+      Exit(True);
+    End;
+  End;
+End;
+
+Function WalkToStart:Boolean;
+Var
+  T: TTimeMarker;
+Begin
+  Result := False;
+
+  CheckStuff;
+  If Not IsLoggedIn Then
+    Exit;
+
+  If SPS.BlindWalk(Point(150,163)) Then
+  Begin
+    SteppingStone;
+  End;
+End;
+
+Procedure Mainloop;
+Begin
+  If Debug Then
+    FunctionStop:= 'MainLoop: Entered';
+
+  CheckStuff;
+
+  Case WhereAmI Of
+    0: WaitFunc(@SteppingStone,10,RandomRange(4000,5000));
+    1: WaitFunc(@UpTree,10,RandomRange(4000,5000));
+    2: WaitFunc(@MonkeyBars,10,RandomRange(4000,5000));
+    3: WaitFunc(@Skulls,10,RandomRange(4000,5000));
+    4: WaitFunc(@WalkToRope,10,RandomRange(4000,5000));
+    5: WaitFunc(@SwingRope,10,RandomRange(4000,5000));
+    6: WaitFunc(@DownTree,10,RandomRange(4000,5000));
+    7: WaitFunc(@WalkToStart,10,RandomRange(4000,5000));
+  End;
+
+  Healing;
+
+  If TakeBreaks Then
+    BreakHandler(BreakIn,BreakFor,Bir,Bfr);
+
+  If Debug Then
+    FunctionStop:= 'MainLoop: Finished';
+End;
+
+
+Procedure LastRun;
+Begin
+  Writeln(FunctionStop);
+End;
+
+Procedure Setup;
+Begin
+  ClearDebug;
+
+  RequirementsCheck;
+  AutoUpdateMe;
+
+  SmartEnableDrawing := True;
+
+  initPlayerForm(); // initiate your settings
+  runPlayerForm();  // run the form
+
+  // use this so the script doesn't continue if the user exits out of the form
+  if (not playerForm.isScriptReady) then
+    terminatescript;
+
+  declarePlayers();
+  If Players[CurrentPlayer].strings[0] = 'DirectX' Then
+    smartPlugins := ['d3d9.dll'];
+  SetupSRL;
+
+  If Not IsLoggedIn Then
+  Begin
+    If Not Players[CurrentPlayer].Login Then
+      TerminateScript;
+
+    Writeln('Just loggedin, waiting a bit');
+    Wait(RandomRange(6000,10000));
+  End;
+
+  If Not Debug Then
+    DisableSRLDebug:=True;
+  ClearDebug;
+
+  If conversationBox.continue(true, true) Then
+    Wait(RandomRange(3000,2000));
+
+  If tabStats.getSkillLevel(Skill_Agility) < 75 Then
+  Begin
+    Writeln('At your agility level there is a chance of failing obstacles, going into safemode');
+    ExtraSafe:=True;
+  End;
+
+  spsAnyAngle:=True;
+  SPS.Setup('0_0APE', 'Runescape_Surface\');
+  Minimap.ClickCompass;
+  MainScreen.SetAngle(MS_ANGLE_HIGH);
+
+  StartingExperience:=ChatBox.GetXP;
+  If StartingExperience<0 Then
+  Begin
+    Writeln('Failed to get xp bar, make sure it is set to total xp or agility and it doesnt say "lots"');
+    TerminateScript;
+  End;
+
+  Timeout.Reset;
+  MiniBreak.Start;
+  MiniBreakTime:=RandomRange(600000,2000000);
+
+  AddOnTerminate('F33DTM');
+  If Debug Then
+    AddOnTerminate('LastRun');
+  SetDTM;
+
+    FunctionStop:= 'Setup: Finished';
+
+  SMARTImage.Clear;
+End;
+
+Begin
+  Setup;
+  While (Players.GetActive() > 0) Do
+    If Not POSDebug Then
+      Mainloop Else
+      WhereAmI;
+End.
