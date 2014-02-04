@@ -84,7 +84,7 @@ AshamanApeAtoll v3.0
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 Const
-  ScriptVersion = '2.1';
+  ScriptVersion = '2.2';
   Debug = False;
   POSDebug = False;
 
@@ -291,7 +291,7 @@ Begin
   Y := RandomRange(-BIR * 60000, BIR * 60000);
   Z := RandomRange(-BFR * 60000, BFR * 60000);
 
-  LogDTM := DTMFromString('mggAAAHicY2NgYHAF4kAo9gNieyB2AuJlQDwPiJcA8SooewMQd03UZeifpsfw4fUchv//Whm+fSoC0vUM/EA5bJgRB4YAAG7nEmc=');
+  LogDTM := DTMFromString('mggAAAHicY2NgYGADYmYGCOAHYiEo5oDSIMADVQcCXRN1Gf7/q2f49qkISLcyfHg9h6F/mh6DCFAOG2bEgSEAAIURDVc=');
   TreeDTM := DTMFromString('mggAAAHicY2NgYJBkYmBQAWIZIP7HyMDwF4gZgOw0IF0OxO1AXArEGUDcCMT+q5QYQjerMETsVmVY1e7KsLnPk2HbBE8GfqA2bJgRB4YAADX5DZs=');
 End;
 
@@ -1185,7 +1185,7 @@ Begin
 
   H := High(ATPA);
 
-  For I := 0 To H Do
+  For I := 0 To Min(H,1) Do
   Begin
     SmartImage.DebugTPA(ATPA[I]);
     MiddleTPAEx(ATPA[I],X,Y);
