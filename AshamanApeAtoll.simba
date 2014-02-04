@@ -55,7 +55,7 @@ Program AshamanApeAtoll;
   {$Define SMART}
   {$I SRL-6/SRL.Simba}
   {$i srl-6/lib/misc/srlplayerform.simba}
-  {$I SPS/SPS-RS3.Simba}
+  {$I SPS/lib/SPS-RS3.Simba}
 {
 AshamanApeAtoll v3.0
 -Can start anywhere in course
@@ -84,7 +84,7 @@ AshamanApeAtoll v3.0
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 Const
-  ScriptVersion = '2.2';
+  ScriptVersion = '2.3';
   Debug = False;
   POSDebug = False;
 
@@ -1290,7 +1290,7 @@ Begin
     Exit(True);
   End;
 
-  findColorsTolerance(tpa, 2124645, Mainscreen.GetBounds, 4,colorSetting(2,0.04,0.17)); //green
+  findColorsTolerance(tpa, 2124389, Mainscreen.GetBounds, 4,colorSetting(2,0.06,0.28)); //green
   ATPA := TPA.Cluster(5);
   ATPA.SortFromFirstPoint(Point(319,126));
 
