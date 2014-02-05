@@ -243,7 +243,7 @@ var
   s: String;
   tpa : TPointArray;
   atpa : T2DPointArray;
-  i,cts,p: Integer;
+  i,cts,p,p2: Integer;
 begin
   b := self.getBounds();
   b.edit(+(b.x2-b.x1)-140, +10, -5, -94);
@@ -265,7 +265,8 @@ begin
   s:=Replace(tesseractgettext(b.x1,b.y1,b.x2,b.y2, FILTER_SMALL_CHARS), ' ', '', [rfReplaceAll]);
 
   P := Pos('x', S);
-  if P > 0 then
+  P2 := Pos('X', S);
+  if (P > 0) Or (P2 > 0) then
     Result := StrToIntDef(ExtractFromStr(Copy(s, P, Length(S)), Numbers), 0)
   else
     Result := StrToIntDef(ExtractFromStr(S, Numbers), 0);
@@ -406,12 +407,6 @@ Begin
 
   If TakeBreaks Then
     Writeln('Time until break: '+MsToTime(TTB, Time_Bare));
-
-
-
-
- { If PrintSmarts Then
-    PrintSmart;}
 End;
 
 Function CheckStuff: Boolean;
@@ -1423,7 +1418,7 @@ Begin
 
   declarePlayers();
   If Players[CurrentPlayer].strings[0] = 'DirectX' Then
-    smartPlugins := ['d3d9.dll'];
+    smartPlugins := ['d3d9.dll','OpenGL32.dll'];
   SetupSRL;
 
   If Not IsLoggedIn Then
