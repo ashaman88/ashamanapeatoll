@@ -84,7 +84,7 @@ AshamanApeAtoll v3.0
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 Const
-  ScriptVersion = '2.3';
+  ScriptVersion = '2.4';
   Debug = False;
   POSDebug = False;
 
@@ -292,7 +292,7 @@ Begin
   Y := RandomRange(-BIR * 60000, BIR * 60000);
   Z := RandomRange(-BFR * 60000, BFR * 60000);
 
-  LogDTM := DTMFromString('mggAAAHicY2NgYGADYmYGCOAHYiEo5oDSIMADVQcCXRN1Gf7/q2f49qkISLcyfHg9h6F/mh6DCFAOG2bEgSEAAIURDVc=');
+  LogDTM := DTMFromString('mggAAAHicY2NgYGADYiEo5meAAGYg5oCyQfI8UDZITddEXYb+aXoMH17PYfj/r5Xh26ciIF3PIAKUw4aZcWAIAAB06Q1j');
   TreeDTM := DTMFromString('mggAAAHicY2NgYJBkYmBQAWIZIP7HyMDwF4gZgOw0IF0OxO1AXArEGUDcCMT+q5QYQjerMETsVmVY1e7KsLnPk2HbBE8GfqA2bJgRB4YAADX5DZs=');
 End;
 
@@ -749,8 +749,8 @@ Begin
 
   Print('Looking for tree to climb up');
 
-  MouseBox([251,196,260,219]);
-  SmartImage.DrawBox(IntToBox(251,196,260,219));
+  MouseBox([244,211,254,236]);
+  SmartImage.DrawBox(IntToBox(244,211,254,236));
   If IsMouseOverText(['limb','ropi','ropi','ical','tree']) Then
   Begin
     Print('Found tree guess click');
@@ -760,7 +760,7 @@ Begin
       Exit;
     End;
     SmartImage.Clear;
-    Mouse(270,200,4,4);
+    MouseBox([262,208,264,232]);
     T.Start;
     Repeat
       If T.GetTime>6000 Then
@@ -813,7 +813,7 @@ Begin
         Exit;
       End;
       SmartImage.Clear;
-   //   HumanMouseBox(237,234-50,239,246-50);
+      MouseBox([262,208,264,232]);
       T.Start;
       Repeat
         If T.GetTime>6000 Then
@@ -911,7 +911,6 @@ Begin
             End;
           Wait(Random(100));
         Until (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds));
-        Wait(RandomRange(800,900));
         Print('Found logdtm');
         If Not ExtraSafe Then
           If (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds)) Then
@@ -999,6 +998,8 @@ Begin
 
   Print('Looking for monkeybars');
 
+  Wait(randomRange(400,600));
+
   findColorsTolerance(tpa, 6265274, Mainscreen.GetBounds, 6,colorSetting(2,0.02,1.38)); //monkeybar
 
   ATPA := TPA.Cluster(25);
@@ -1018,12 +1019,12 @@ Begin
       MonkeyBox:=GetTPABounds(ATPA[I]);
       MiddleTPAEx(ATPA[I],X,Y);
 
-      Mouse(MonkeyBox.X2-62,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
+      Mouse(MonkeyBox.X2-67,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
 
       If (IsMouseOverText(['wing','cross','ross','onke','ybars','bars'])) Then
       Begin
         Print('Found bars TPA, clicking');
-        If Not DidClick(True) Then
+        If DidClick(False) Then
         Begin
           FailSafe;
           SetLength(ATPA,0);
@@ -1054,7 +1055,7 @@ Begin
 
   SetLength(ATPA,0);
 
-  MouseBox([266,199,268,219]);
+  MouseBox([262,208,264,232]);
   Wait(Random(200));
   If IsMouseOverText(['wing','cross','ross','onke','ybars','bars']) Then
   Begin
@@ -1109,7 +1110,6 @@ Var
   T: TTimeMarker;
 Begin
   Result := False;
-  MouseSpeed := RandomRange(18,20);
 
   CheckStuff;
   If Not IsLoggedIn Then
@@ -1185,7 +1185,7 @@ Begin
     SmartImage.DebugTPA(ATPA[I]);
     MiddleTPAEx(ATPA[I],X,Y);
 
-    Mouse(X,Y,GaussRangeInt(-2,2),GaussRangeInt(-3,15));
+    Mouse(X,Y,GaussRangeInt(-2,2),GaussRangeInt(20,42));
 
     If (IsMouseOverText(['Swing','wing','Rope','ope'])) Then
     Begin
@@ -1245,7 +1245,7 @@ Begin
 
   Print('Looking for tree to climb down');
 
-  MouseBox([316,109,326,122]);
+  MouseBox([317,97,326,113]);
   If IsMouseOverText(['down','-dow','opic','tree','ical','ropi']) Then
   Begin
     Print('Found tree down, guessing');
@@ -1361,7 +1361,7 @@ Begin
   If Not IsLoggedIn Then
     Exit;
 
-  If SPS.BlindWalk(Point(150,163)) Then
+  If SPS.BlindWalk(Point(151,165)) Then
   Begin
     SteppingStone;
   End;
