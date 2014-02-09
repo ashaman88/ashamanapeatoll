@@ -84,7 +84,7 @@ AshamanApeAtoll v3.0
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 Const
-  ScriptVersion = '2.4';
+  ScriptVersion = '2.5';
   Debug = False;
   POSDebug = False;
 
@@ -1019,7 +1019,7 @@ Begin
       MonkeyBox:=GetTPABounds(ATPA[I]);
       MiddleTPAEx(ATPA[I],X,Y);
 
-      Mouse(MonkeyBox.X2-67,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
+      Mouse(MonkeyBox.X2-68,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
 
       If (IsMouseOverText(['wing','cross','ross','onke','ybars','bars'])) Then
       Begin
@@ -1055,7 +1055,7 @@ Begin
 
   SetLength(ATPA,0);
 
-  MouseBox([262,208,264,232]);
+  MouseBox([261,208,263,232]);
   Wait(Random(200));
   If IsMouseOverText(['wing','cross','ross','onke','ybars','bars']) Then
   Begin
@@ -1361,7 +1361,7 @@ Begin
   If Not IsLoggedIn Then
     Exit;
 
-  If SPS.BlindWalk(Point(151,165)) Then
+  If SPS.BlindWalk(Point(151,168)) Then
   Begin
     SteppingStone;
   End;
