@@ -84,63 +84,49 @@ AshamanApeAtoll v3.0
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 Const
-  ScriptVersion = '2.5';
+  ScriptVersion = '2.6';
   Debug = False;
   POSDebug = False;
 
-  Area0X1 = 151;   //steppingstone
-  Area0Y1 = 135;
-  Area0X2 = 170;
-  Area0Y2 = 164;
+  BEFORE_STEPPING_STONE_BOX: TBox = [151,135,170,164];
+  BEFORE_STEPPING_STONE = 0;
 
-  Area1X1 = 140;
-  Area1Y1 = 135;     //before uptree
-  Area1X2 = 150;
-  Area1Y2 = 170;
+  BEFORE_UP_TREE_BOX: TBox = [140,135,150,170];
+  BEFORE_UP_TREE = 1;
 
-  Area2X1 = -10;
-  Area2Y1 = -10;
-  Area2X2 = 10;        //before monkeybars
-  Area2Y2 = 10;
+  BEFORE_MONKEY_BARS_BOX: TBox = [-10,-10,10,10];
+  BEFORE_MONKEY_BARS = 2;
 
-  Area3X1 = 118;
-  Area3Y1 = 155;    //aftermonkeybars
-  Area3X2 = 128;
-  Area3Y2 = 170;
+  BEFORE_SKULLS_BOX: TBox = [118,155,128,170];
+  BEFORE_SKULLS = 3;
 
-  Area4X1 = 90;
-  Area4Y1 = 158;    //after skulls
-  Area4X2 = 124;
-  Area4Y2 = 212;
+  AFTER_SKULLS_BOX: TBox = [90,158,124,212];
+  AFTER_SKULLS = 4;
 
-  Area5X1 = 125;
-  Area5Y1 = 190;    //beforeropeswing
-  Area5X2 = 145;
-  Area5Y2 = 215;
+  BEFORE_ROPE_SWING_BOX: TBox = [125,190,145,215];
+  BEFORE_ROPE_SWING = 5;
 
-  Area6X1 = 150;
-  Area6Y1 = 185;    //beforeropedown
-  Area6X2 = 175;
-  Area6Y2 = 213;
+  BEFORE_ROPE_DOWN_BOX: TBox = [150,185,175,213];
+  BEFORE_ROPE_DOWN = 6;
 
-  Area7X1 = 165;
-  Area7Y1 = 134;    //afterfinalobstacle
-  Area7X2 = 216;
-  Area7Y2 = 180;
+  AFTER_FINAL_BOX: TBox = [165,134,216,180];
+  AFTER_FINAL = 7;
+
+  AREAS: TBoxArray = [BEFORE_STEPPING_STONE_BOX,BEFORE_UP_TREE_BOX,BEFORE_MONKEY_BARS_BOX,BEFORE_SKULLS_BOX,+
+                      AFTER_SKULLS_BOX,BEFORE_ROPE_SWING_BOX,BEFORE_ROPE_DOWN_BOX,AFTER_FINAL_BOX];
+
+  AREAHIGH = 8;
 
 Var
  XP,StartingExperience,TreeDTM: Integer;
- BreakIn,BreakFor,LogDTM,AreaHigh: Integer;
+ BreakIn,BreakFor,LogDTM: Integer;
  W,X,Y,Z,RealBTime,BreakRounds,TotalBreaks,MiniBreakTime: Integer;
- Area0,Area1,Area2,Area3,Area4,Area5,Area6,Area7: TBox;
  XPH: Extended;
- Areas: TBoxArray;
  FunctionStop: String;
- ExtraSafe,SwitchWorlds,TakeBreaks,MiniBreaks: Boolean;
+ ExtraSafe,SwitchWorlds,TakeBreaks,MiniBreaks,CheckFirst: Boolean;
  Timeout,Timeout2,MiniBreak,CurrentBTime: TTimeMarker;
 
 Const
-  PrintSmarts  = True;    // ***Print proggy on smart? There may be a memory leak in the includes FYI***
   DMP          = True;    // ***Auto grabs SPS map if not found - should keep true***
 
   TimeoutFS    = True;    // ***If no XP gained in 5 minutes, terminate script?***
@@ -276,17 +262,6 @@ end;
 
 Procedure SetDTM;
 Begin
-  Area0:=IntToBox(Area0X1,Area0Y1,Area0X2,Area0Y2);
-  Area1:=IntToBox(Area1X1,Area1Y1,Area1X2,Area1Y2);
-  Area2:=IntToBox(Area2X1,Area2Y1,Area2X2,Area2Y2);
-  Area3:=IntToBox(Area3X1,Area3Y1,Area3X2,Area3Y2);
-  Area4:=IntToBox(Area4X1,Area4Y1,Area4X2,Area4Y2);
-  Area5:=IntToBox(Area5X1,Area5Y1,Area5X2,Area5Y2);
-  Area6:=IntToBox(Area6X1,Area6Y1,Area6X2,Area6Y2);
-  Area7:=IntToBox(Area7X1,Area7Y1,Area7X2,Area7Y2);
-  Areas:=[Area0,Area1,Area2,Area3,Area4,Area5,Area6,Area7];
-  AreaHigh:=High(Areas);
-
   W := (BreakIn * 60000);
   X := (BreakFor * 60000);
   Y := RandomRange(-BIR * 60000, BIR * 60000);
@@ -409,12 +384,28 @@ Begin
     Writeln('Time until break: '+MsToTime(TTB, Time_Bare));
 End;
 
+
+
 Function CheckStuff: Boolean;
 Begin
   Result:=False;
 
   If Not IsLoggedIn Then
   Begin
+    Wait(RandomRange(2000,3000));
+    If Not Players[CurrentPlayer].Login Then
+      TerminateScript;
+    Wait(RandomRange(2000,3000));
+    Minimap.ClickCompass;
+    MainScreen.SetAngle(MS_ANGLE_HIGH);
+    Wait(RandomRange(2000,3000));
+    Timeout.Start;
+    Result:=True;
+  End;
+
+  If (Length(Minimap.GetDots(MM_DOT_NPC,Minimap.GetBounds))>0) And ((CountColorTolerance(459779,Minimap.GetBounds,10)>5000) Or (CountColorTolerance(1774084,Minimap.GetBounds,10)>5000))Then
+  Begin
+    Players[CurrentPlayer].ExitToLobby;
     Wait(RandomRange(2000,3000));
     If Not Players[CurrentPlayer].Login Then
       TerminateScript;
@@ -447,7 +438,45 @@ Begin
     End;
 End;
 
-Function WalkToStart: Boolean; Forward;
+
+Procedure QuickStep;
+Begin
+  If Not CheckFirst Then
+    Exit;
+  MouseBox([195,225,202,232]);
+  If (IsMouseOverText(['Jump','-to','pping','tone','ping','tepp'],RandomRange(6000,8000))) Then
+  Begin
+    If DidClick(True) Then
+    Begin
+      MouseBox([244,211,254,236]);
+      Wait(RandomRange(3000,3500));
+    End;
+  End;
+  CheckFirst:=False;
+End;
+
+Function WalkToStart:Boolean;
+Var
+  T: TTimeMarker;
+Begin
+  Result := False;
+
+  CheckStuff;
+
+  If Not IsLoggedIn Then
+    Exit;
+
+  CheckFirst:=True;
+
+  Case Random(10) Of
+    0..1: SRL_Events[EVENT_ANTIBAN] := nil;
+    Else
+      SRL_Events[EVENT_ANTIBAN] := @QuickStep;
+  End;
+
+  If SPS.WalkToPos(Point(151,168)) Then
+    Result:=True;
+End;
 
 Function WhereAmI: Integer;
 Var
@@ -468,8 +497,8 @@ Begin
 
   Print('SPS Point: '+ToStr(Location));
 
-  For I := 0 To AreaHigh Do
-    If PointInBox(Location, Areas[I]) Then
+  For I := 0 To AREAHIGH Do
+    If PointInBox(Location, AREAS[I]) Then
     Begin
       Result := I;
       Break;
@@ -477,6 +506,9 @@ Begin
 
   If (Result=-1) Then
     Print('WARNING DONT KNOW WHERE YOU ARE!');
+
+  If Timeout.GetTime > 60000 Then
+    WalkToStart;
 
   Print('We are at position: '+ToStr(I));
 
@@ -598,7 +630,21 @@ Begin
     FunctionStop:= 'FixPosition: Finished';
 End;
 
-Function SwingRope:Boolean; Forward;
+Procedure QuickSwing;
+Begin
+  If Not CheckFirst Then
+    Exit;
+  MouseBox([469,328,508,343]);
+  If IsMouseOverText(['Swing','wing','Rope','ope'],RandomRange(6000,8000)) Then
+  Begin
+    If DidClick(True) Then
+    Begin
+      Wait(RandomRange(200,400));
+      MouseBox([317,97,326,113]);
+    End;
+  End;
+  CheckFirst:=False;
+End;
 
 Function WalkToRope:Boolean;
 Var
@@ -614,11 +660,16 @@ Begin
   If Debug Then
     Writeln('Walking to rope');
 
-  If SPS.BlindWalk(Point(140,204)) Then
-  Begin
-    SwingRope;
-    Result:=True;
+  CheckFirst:=True;
+
+  Case Random(10) Of
+    0..1: SRL_Events[EVENT_ANTIBAN] := nil;
+    Else
+      SRL_Events[EVENT_ANTIBAN] := @QuickSwing;
   End;
+
+  If SPS.WalkToPos(Point(140,204)) Then
+    Result:=True;
 End;
 
 Function SteppingStone:Boolean;
@@ -718,8 +769,6 @@ Begin
   SetLength(ATPA,0);
 End;
 
-Function MonkeyBars:Boolean; Forward;
-
 Function UpTree:Boolean;
 Var
   H,I,X,Y: Integer;
@@ -760,7 +809,7 @@ Begin
       Exit;
     End;
     SmartImage.Clear;
-    MouseBox([262,208,264,232]);
+    MouseBox([259,215,263,225]);
     T.Start;
     Repeat
       If T.GetTime>6000 Then
@@ -771,9 +820,6 @@ Begin
       Wait(Random(100));
     Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
     Wait(RandomRange(300,400));
-    If Not ExtraSafe Then
-      If (CountColorTolerance(459779,Minimap.GetBounds,10)>10000) Then
-        MonkeyBars;
     Exit(True);
   End;
 
@@ -797,7 +843,7 @@ Begin
 
   H := High(ATPA);
 
-  For I := 0 To Min(H,2) Do
+  For I := 0 To Min(H,1) Do
   Begin
     MiddleTPAEx(ATPA[I],X,Y);
 
@@ -813,7 +859,7 @@ Begin
         Exit;
       End;
       SmartImage.Clear;
-      MouseBox([262,208,264,232]);
+      MouseBox([259,215,263,225]);
       T.Start;
       Repeat
         If T.GetTime>6000 Then
@@ -824,9 +870,6 @@ Begin
         Wait(Random(100));
       Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
       Wait(RandomRange(300,400));
-      If Not ExtraSafe Then
-        If (CountColorTolerance(459779,Minimap.GetBounds,10)>10000) Then
-          MonkeyBars;
       SetLength(ATPA,0);
       Exit(True);
     End;
@@ -926,7 +969,7 @@ Begin
   End Else
     Print('No skull colors found');
 
-  Mouse(270,202,1,1);
+  Mouse(264,201,1,1);
   If IsMouseOverText(['kull','Skul','kul','slope','slop','lope']) Then
   Begin
     Print('Found skull, guess click');
@@ -939,7 +982,7 @@ Begin
       Wait(Random(100));
     Until (WhereAmI<>3);
     Print('Out of area 3, looking for logdtm');
-   // HumanMMouse(664,173-50,8,8);
+    Mouse(721,139,8,8);
     Wait(RandomRange(700,900));
     T.Start;
     Repeat
@@ -1000,14 +1043,41 @@ Begin
 
   Wait(randomRange(400,600));
 
+  MouseBox([259,215,263,225]);
+  Wait(Random(200));
+  If IsMouseOverText(['wing','cross','ross','onke','ybars','bars']) Then
+  Begin
+    Print('Found monkeybars, guess clicking');
+
+    If DidClick(False) Then
+    Begin
+      FailSafe;
+      Exit;
+    End;
+
+    Mouse(264,201,1,1);
+    T.Start;
+    Repeat
+      If T.GetTime>9000 Then
+      Begin
+        Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+        Break;
+      End;
+      Wait(Random(100));
+    Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+    Wait(RandomRange(300,400));
+    If Not ExtraSafe Then
+      If (CountColorTolerance(459779,Minimap.GetBounds,10)<10000) Then
+        Skulls;
+    Exit(True);
+  End;
+
   findColorsTolerance(tpa, 6265274, Mainscreen.GetBounds, 6,colorSetting(2,0.02,1.38)); //monkeybar
 
   ATPA := TPA.Cluster(25);
   ATPA.SortBySize;
 
   SetLength(TPA,0);
-
-
 
   If Not (Length(ATPA) = 0) Then
   Begin
@@ -1019,7 +1089,7 @@ Begin
       MonkeyBox:=GetTPABounds(ATPA[I]);
       MiddleTPAEx(ATPA[I],X,Y);
 
-      Mouse(MonkeyBox.X2-68,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
+      Mouse(MonkeyBox.X2-66,Y,GaussRangeInt(-1,1),GaussRangeInt(-4,4));
 
       If (IsMouseOverText(['wing','cross','ross','onke','ybars','bars'])) Then
       Begin
@@ -1031,7 +1101,7 @@ Begin
           Exit;
         End;
 
-        Mouse(270,199,2,2);
+        Mouse(264,201,1,1);
         SmartImage.Clear;
         T.Start;
         Repeat
@@ -1054,37 +1124,7 @@ Begin
     Print('No monkeybar colors found');
 
   SetLength(ATPA,0);
-
-  MouseBox([261,208,263,232]);
-  Wait(Random(200));
-  If IsMouseOverText(['wing','cross','ross','onke','ybars','bars']) Then
-  Begin
-    Print('Found monkeybars, guess clicking');
-
-    If DidClick(False) Then
-    Begin
-      FailSafe;
-      Exit;
-    End;
-
-  //  HumanMMouse(241,228-50,1,1);
-    T.Start;
-    Repeat
-      If T.GetTime>9000 Then
-      Begin
-        Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
-        Break;
-      End;
-      Wait(Random(100));
-    Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
-    Wait(RandomRange(300,400));
-    If Not ExtraSafe Then
-      If (CountColorTolerance(459779,Minimap.GetBounds,10)<10000) Then
-        Skulls;
-    Exit(True);
-  End;
 End;
-
 
 Function WaterBox: TBox;
 Var
@@ -1351,22 +1391,6 @@ Begin
   End;
 End;
 
-Function WalkToStart:Boolean;
-Var
-  T: TTimeMarker;
-Begin
-  Result := False;
-
-  CheckStuff;
-  If Not IsLoggedIn Then
-    Exit;
-
-  If SPS.BlindWalk(Point(151,168)) Then
-  Begin
-    SteppingStone;
-  End;
-End;
-
 Procedure Mainloop;
 Begin
   If Debug Then
@@ -1375,14 +1399,14 @@ Begin
   CheckStuff;
 
   Case WhereAmI Of
-    0: WaitFunc(@SteppingStone,10,RandomRange(4000,5000));
-    1: WaitFunc(@UpTree,10,RandomRange(4000,5000));
-    2: WaitFunc(@MonkeyBars,10,RandomRange(4000,5000));
-    3: WaitFunc(@Skulls,10,RandomRange(4000,5000));
-    4: WaitFunc(@WalkToRope,10,RandomRange(4000,5000));
-    5: WaitFunc(@SwingRope,10,RandomRange(4000,5000));
-    6: WaitFunc(@DownTree,10,RandomRange(4000,5000));
-    7: WaitFunc(@WalkToStart,10,RandomRange(4000,5000));
+    BEFORE_STEPPING_STONE: SteppingStone;
+    BEFORE_UP_TREE: UpTree;
+    BEFORE_MONKEY_BARS: MonkeyBars;
+    BEFORE_SKULLS: Skulls;
+    AFTER_SKULLS: WalkToRope;
+    BEFORE_ROPE_SWING: SwingRope;
+    BEFORE_ROPE_DOWN: DownTree;
+    AFTER_FINAL: WalkToStart;
   End;
 
   Healing;
