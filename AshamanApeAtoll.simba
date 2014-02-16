@@ -56,35 +56,8 @@ Program AshamanApeAtoll;
   {$I SRL-6/SRL.Simba}
   {$i srl-6/lib/misc/srlplayerform.simba}
   {$I SPS/lib/SPS-RS3.Simba}
-{
-AshamanApeAtoll v3.0
--Can start anywhere in course
--If you need food, try having only food items in inventory
--Start with ninja greegree equipped
--Fill out player details if you want to go past 6 hours!
--Minimize the ability bar!
--You must have set the top xp bar tracker to total or agility xp and it can't say 'lots'
-^^IF YOU DONT DO THAT STEP THE SCRIPT WILL TIMEOUT AFTER 5 MINUTES
--PS ignore the dtm errors on script terminate, this is a mystery
-}
-
-///////////////////////////////////////////////////////////////////////
-//                                                                   //
-//                  Begin of user setup                              //
-//                Fill in the fields below                           //
-//                                                                   //
-///////////////////////////////////////////////////////////////////////
-
-
-///////////////////////////////////////////////////////////////////////////////////////////
-//                                                                                       //
-//                            End of user setup                                          //
-//           Don't touch below this line unless you know what you're doing!!             //
-//                                                                                       //
-///////////////////////////////////////////////////////////////////////////////////////////
-
 Const
-  ScriptVersion = '2.6';
+  ScriptVersion = '2.7';
   Debug = False;
   POSDebug = False;
 
@@ -125,6 +98,8 @@ Var
  FunctionStop: String;
  ExtraSafe,SwitchWorlds,TakeBreaks,MiniBreaks,CheckFirst: Boolean;
  Timeout,Timeout2,MiniBreak,CurrentBTime: TTimeMarker;
+
+
 
 Const
   DMP          = True;    // ***Auto grabs SPS map if not found - should keep true***
@@ -279,7 +254,7 @@ End;
 
 Function FindNormalRandoms: Boolean;
 Begin
-  Result:= ExitSquealOfFortune Or ClaimSpinTicket;
+  Result:= ExitTreasure Or ClaimTicket;
 End;
 
 Function GrabMaps: Boolean;
@@ -507,7 +482,7 @@ Begin
   If (Result=-1) Then
     Print('WARNING DONT KNOW WHERE YOU ARE!');
 
-  If Timeout.GetTime > 60000 Then
+  If (Timeout.GetTime > 60000) And ((I = -1) or (I = 0) or (I = 7)) Then
     WalkToStart;
 
   Print('We are at position: '+ToStr(I));
@@ -1466,6 +1441,7 @@ Begin
     Writeln('At your agility level there is a chance of failing obstacles, going into safemode');
     ExtraSafe:=True;
   End;
+  TabBackpack.Open;
 
   spsAnyAngle:=True;
   SPS.Setup('0_0APE', 'Runescape_Surface\');
