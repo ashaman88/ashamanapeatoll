@@ -57,8 +57,8 @@ Program AshamanApeAtoll;
   {$i srl-6/lib/misc/srlplayerform.simba}
   {$I SPS/lib/SPS-RS3.Simba}
 Const
-  ScriptVersion = '2.7';
-  Debug = False;
+  ScriptVersion = '2.8';
+  Debug = false;
   POSDebug = False;
 
   BEFORE_STEPPING_STONE_BOX: TBox = [151,135,170,164];
@@ -87,6 +87,9 @@ Const
 
   AREAS: TBoxArray = [BEFORE_STEPPING_STONE_BOX,BEFORE_UP_TREE_BOX,BEFORE_MONKEY_BARS_BOX,BEFORE_SKULLS_BOX,+
                       AFTER_SKULLS_BOX,BEFORE_ROPE_SWING_BOX,BEFORE_ROPE_DOWN_BOX,AFTER_FINAL_BOX];
+
+  AREANAMES: TStringArray = ['Before Stepping Stone', 'Before Up Tree', 'Before Monkey Bars', 'Before Skulls', 'After Skulls', 'Before Rope Swing' +
+                             'Before Rope Down', 'After Final Rope'];
 
   AREAHIGH = 8;
 
@@ -132,8 +135,6 @@ begin
       SwitchWorlds := strToBool(playerForm.players[i].settings[4]);    //find spirits
       FindMod := strToBool(playerForm.players[i].settings[6]);        //logmod
 
-      // any other data types you've decided to use
-      strings[0] := playerForm.players[i].settings[7]; //quickkey
     end;
 end;
 
@@ -150,13 +151,6 @@ begin
     editBoxDefaults := [ '0', '600', '15'];                                             // optional default values for each edit box; array length must equal editBoxLabel length
     checkBoxLabels := ['Take Breaks','Switch Worlds (After Break)', 'MiniBreaks', 'Logout if Mod is near'];        // same as editBoxLabels but for check boxes
     checkBoxDefaults := ['True','True','True','True'];
-
-    comboBoxLabels := ['GraphicsMode'];                                                // same as editBoxLabels but for combo boxes (drop down boxes)
-    comboBoxDefaults := ['DirectX'];
-
-    // this needs to be done for every element in the comboBoxLabels array
-    setLength(comboBoxItems, length(comboBoxLabels));
-    comboBoxItems[0] := ['OpenGL', 'DirectX'];
   end;
 end;
 
@@ -242,8 +236,8 @@ Begin
   Y := RandomRange(-BIR * 60000, BIR * 60000);
   Z := RandomRange(-BFR * 60000, BFR * 60000);
 
-  LogDTM := DTMFromString('mggAAAHicY2NgYGADYiEo5meAAGYg5oCyQfI8UDZITddEXYb+aXoMH17PYfj/r5Xh26ciIF3PIAKUw4aZcWAIAAB06Q1j');
-  TreeDTM := DTMFromString('mggAAAHicY2NgYJBkYmBQAWIZIP7HyMDwF4gZgOw0IF0OxO1AXArEGUDcCMT+q5QYQjerMETsVmVY1e7KsLnPk2HbBE8GfqA2bJgRB4YAADX5DZs=');
+  LogDTM := DTMFromString('mlwAAAHicY2dgYJACYjUg5oZiMSBWBeIGIK4D4hIgDgHiTUDcDsTNQLwLiCvqVBj+vshkKK9VZYhKlWX49yyD4d31RIb1c/MYRIDyuDAzHgwFALTiEP8=');
+  TreeDTM := DTMFromString('mggAAAHicY2NgYJABYmYGCGAEYnkgVofypYGYCYj5gVgRiAWB2H+VEsO2CZ4Mm/s8GVa1uzJE7FZlCN2swqAMlMOGGXFgCAAAlTsJsQ==');
 End;
 
 Procedure F33DTM;
@@ -264,9 +258,9 @@ var
   SPSFile: LongInt;
 begin
   Name:= IncludePath + 'SPS\img\runescape_surface\0_0APE.png';
-  Map:= 'http://imageshack.com/a/img802/9954/p46i.png';
+  Map:= 'http://imagizer.imageshack.us/a/img802/9954/p46i.png';
   begin
-    if (Not FileExists(Name)) then
+    if (not fileExists(Name)) then
     begin
       writeln('No file, downloading');
       SPSFile:=CreateFile(Name);
@@ -380,6 +374,8 @@ Begin
 
   If (Length(Minimap.GetDots(MM_DOT_NPC,Minimap.GetBounds))>0) And ((CountColorTolerance(459779,Minimap.GetBounds,10)>5000) Or (CountColorTolerance(1774084,Minimap.GetBounds,10)>5000))Then
   Begin
+    Writeln(CountColorTolerance(459779,Minimap.GetBounds,10));
+    writeLn(CountColorTolerance(1774084,Minimap.GetBounds,10));
     Players[CurrentPlayer].ExitToLobby;
     Wait(RandomRange(2000,3000));
     If Not Players[CurrentPlayer].Login Then
@@ -409,6 +405,7 @@ Begin
     If Timeout.GetTime>600000 Then
     Begin
       Writeln('Nothing has happened for too long, shutting down.');
+      Writeln(Timeout.getTime);
       TerminateScript;
     End;
 End;
@@ -418,12 +415,13 @@ Procedure QuickStep;
 Begin
   If Not CheckFirst Then
     Exit;
-  MouseBox([195,225,202,232]);
+  MouseBox([200,225,210,232]);
   If (IsMouseOverText(['Jump','-to','pping','tone','ping','tepp'],RandomRange(6000,8000))) Then
   Begin
     If DidClick(True) Then
     Begin
-      MouseBox([244,211,254,236]);
+      timeout.start;
+      MouseBox([254, 209, 265, 220]);
       Wait(RandomRange(3000,3500));
     End;
   End;
@@ -479,13 +477,17 @@ Begin
       Break;
     End;
 
-  If (Result=-1) Then
-    Print('WARNING DONT KNOW WHERE YOU ARE!');
-
   If (Timeout.GetTime > 60000) And ((I = -1) or (I = 0) or (I = 7)) Then
     WalkToStart;
 
-  Print('We are at position: '+ToStr(I));
+
+  If (Result=-1) Then
+  begin
+    Print('WARNING DONT KNOW WHERE YOU ARE!');
+    exit;
+  end;
+
+  Print('We are at position: '+ AREANAMES[I]);
 
   FunctionStop:= 'WhereAmI: Finished';
 End;
@@ -609,13 +611,13 @@ Procedure QuickSwing;
 Begin
   If Not CheckFirst Then
     Exit;
-  MouseBox([469,328,508,343]);
+  MouseBox([475, 300, 495, 320]);
   If IsMouseOverText(['Swing','wing','Rope','ope'],RandomRange(6000,8000)) Then
   Begin
     If DidClick(True) Then
     Begin
       Wait(RandomRange(200,400));
-      MouseBox([317,97,326,113]);
+      MouseBox([308, 114, 316, 125]);
     End;
   End;
   CheckFirst:=False;
@@ -649,7 +651,7 @@ End;
 
 Function SteppingStone:Boolean;
 Var
-  H,I,X,Y: Integer;
+  H,I,X,Y, XPI: Integer;
   T: TTimeMarker;
   TPA: TPointArray;
   ATPA: T2DPointArray;
@@ -673,12 +675,6 @@ Begin
       Exit(True);
     End;
 
-  If XP < (ChatBox.GetXP - StartingExperience) Then
-  Begin
-    XP:=(ChatBox.GetXP - StartingExperience);
-    Timeout.Reset;
-  End;
-
   Print('Looking for Stepping stone');
 
   If (IsMouseOverText(['Jump','-to','pping','tone','ping','tepp'],10)) Then
@@ -690,11 +686,13 @@ Begin
       Exit;
     End;
     T.Start;
+    XPI := chatBox.getXP;
     Repeat
       If T.GetTime>6000 Then
         Break;
       Wait(Random(100));
-    Until (XP < (ChatBox.GetXP - StartingExperience));
+    Until (XPI <> (ChatBox.GetXP));
+    timeout.start;
     Exit(True);
   End;
 
@@ -730,12 +728,14 @@ Begin
         End;
         SmartImage.Clear;
         T.Start;
+        XPI := chatBox.getXP;
         Repeat
           If T.GetTime>6000 Then
             Break;
           Wait(Random(100));
-        Until (XP < (ChatBox.GetXP - StartingExperience));
+        Until (XPI <> (ChatBox.GetXP));
         SetLength(ATPA,0);
+        timeout.start;
         Exit(True);
       End;
     End;
@@ -765,16 +765,10 @@ Begin
       Exit(True);
     End;
 
-  If XP < (ChatBox.GetXP - StartingExperience) Then
-  Begin
-    XP:=(ChatBox.GetXP - StartingExperience);
-    Timeout.Reset;
-  End;
-
   Print('Looking for tree to climb up');
 
-  MouseBox([244,211,254,236]);
-  SmartImage.DrawBox(IntToBox(244,211,254,236));
+  MouseBox([254, 209, 265, 220]);
+  SmartImage.DrawBox(IntToBox(254, 209, 265, 220));
   If IsMouseOverText(['limb','ropi','ropi','ical','tree']) Then
   Begin
     Print('Found tree guess click');
@@ -784,7 +778,7 @@ Begin
       Exit;
     End;
     SmartImage.Clear;
-    MouseBox([259,215,263,225]);
+    MouseBox([266, 202, 269, 218]);
     T.Start;
     Repeat
       If T.GetTime>6000 Then
@@ -795,6 +789,7 @@ Begin
       Wait(Random(100));
     Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
     Wait(RandomRange(300,400));
+    timeout.start;
     Exit(True);
   End;
 
@@ -834,7 +829,7 @@ Begin
         Exit;
       End;
       SmartImage.Clear;
-      MouseBox([259,215,263,225]);
+      MouseBox([266, 202, 269, 218]);
       T.Start;
       Repeat
         If T.GetTime>6000 Then
@@ -846,6 +841,7 @@ Begin
       Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
       Wait(RandomRange(300,400));
       SetLength(ATPA,0);
+      timeout.start;
       Exit(True);
     End;
   End;
@@ -872,12 +868,6 @@ Begin
       Print('Not at spot 3, automatic true');
       Exit(True);
     End;
-
-  If XP < (ChatBox.GetXP - StartingExperience) Then
-  Begin
-    XP:=(ChatBox.GetXP - StartingExperience);
-    Timeout.Reset;
-  End;
 
   Print('Looking for skulls');
 
@@ -929,6 +919,7 @@ Begin
             End;
           Wait(Random(100));
         Until (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds));
+        timeout.start;
         Print('Found logdtm');
         If Not ExtraSafe Then
           If (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds)) Then
@@ -944,7 +935,7 @@ Begin
   End Else
     Print('No skull colors found');
 
-  Mouse(264,201,1,1);
+  Mouse(271, 204, 1, 1);
   If IsMouseOverText(['kull','Skul','kul','slope','slop','lope']) Then
   Begin
     Print('Found skull, guess click');
@@ -971,6 +962,7 @@ Begin
         End;
       Wait(Random(100));
     Until (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds));
+    timeout.start;
     Print('Found logdtm');
     If Not ExtraSafe Then
       If (FindDTM(LogDTM,X,Y,Mainscreen.GetBounds)) Then
@@ -1008,17 +1000,11 @@ Begin
       Exit(True);
     End;
 
-  If XP < (ChatBox.GetXP - StartingExperience) Then
-  Begin
-    XP:=(ChatBox.GetXP - StartingExperience);
-    Timeout.Reset;
-  End;
-
   Print('Looking for monkeybars');
 
   Wait(randomRange(400,600));
 
-  MouseBox([259,215,263,225]);
+  MouseBox([266, 202, 269, 218]);
   Wait(Random(200));
   If IsMouseOverText(['wing','cross','ross','onke','ybars','bars']) Then
   Begin
@@ -1030,7 +1016,7 @@ Begin
       Exit;
     End;
 
-    Mouse(264,201,1,1);
+    Mouse(271,204,1,1);
     T.Start;
     Repeat
       If T.GetTime>9000 Then
@@ -1040,6 +1026,7 @@ Begin
       End;
       Wait(Random(100));
     Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+    timeout.start;
     Wait(RandomRange(300,400));
     If Not ExtraSafe Then
       If (CountColorTolerance(459779,Minimap.GetBounds,10)<10000) Then
@@ -1076,7 +1063,7 @@ Begin
           Exit;
         End;
 
-        Mouse(264,201,1,1);
+        Mouse(271,204,1,1);
         SmartImage.Clear;
         T.Start;
         Repeat
@@ -1087,6 +1074,7 @@ Begin
           End;
           Wait(Random(100));
         Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+        timeout.start;
         Wait(RandomRange(300,400));
         If Not ExtraSafe Then
           If (CountColorTolerance(459779,Minimap.GetBounds,10)<10000) Then
@@ -1146,12 +1134,6 @@ Begin
       Exit;
     End;
 
-  If XP < (ChatBox.GetXP - StartingExperience) Then
-  Begin
-    XP:=(ChatBox.GetXP - StartingExperience);
-    Timeout.Reset;
-  End;
-
   If Timeout.GetTime>20000 Then
     FixPosition(5);
 
@@ -1167,7 +1149,7 @@ Begin
     End;
     SmartImage.Clear;
 
-    Mouse(309,109,10,10);
+    Mouse(308,114,10,10);
 
     T.Start;
     Repeat
@@ -1175,6 +1157,8 @@ Begin
         Break;
       Wait(Random(100));
     Until (FindDTM(TreeDTM,X,Y,Mainscreen.GetBounds));
+
+    timeout.start;
 
     Print('Found treedtm');
     Exit(True);
@@ -1212,7 +1196,7 @@ Begin
         Exit;
       End;
       SmartImage.Clear;
-   //   HumanMMouse(290,112-50,10,10);
+      Mouse(308,114,10,10);
 
       Print('Out of area 5, looking for treedtm');
 
@@ -1225,6 +1209,7 @@ Begin
 
       Print('Found treedtm');
       SetLength(ATPA,0);
+      timeout.start;
       Exit(True);
     End;
   End;
@@ -1252,15 +1237,9 @@ Begin
       Exit(True);
     End;
 
-  If XP < (ChatBox.GetXP - StartingExperience) Then
-  Begin
-    XP:=(ChatBox.GetXP - StartingExperience);
-    Timeout.Reset;
-  End;
-
   Print('Looking for tree to climb down');
 
-  MouseBox([317,97,326,113]);
+  MouseBox([308, 114, 316, 125]);
   If IsMouseOverText(['down','-dow','opic','tree','ical','ropi']) Then
   Begin
     Print('Found tree down, guessing');
@@ -1279,6 +1258,7 @@ Begin
       End;
       Wait(Random(100));
     Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
+    timeout.start;
     Print('Black MM is up');
     Wait(RandomRange(1500,2200));
     Mouse(620,120,6,6);
@@ -1341,6 +1321,7 @@ Begin
         End;
         Wait(Random(100));
       Until (CountColorTolerance(459779,Minimap.GetBounds,10)>10000);
+      timeout.start;
       Wait(RandomRange(1800,2200));
  //     HumanMMouse(566,154-50,6,6);
       T.Start;
@@ -1355,6 +1336,7 @@ Begin
         End;
         Wait(Random(100));
       Until (CountColorTolerance(459779,Minimap.GetBounds,10)<10000);
+      timeout.start;
       ProgressReport;
       Wait(RandomRange(300,500));
       If Not IsLoggedIn Then
@@ -1416,8 +1398,7 @@ Begin
     terminatescript;
 
   declarePlayers();
-  If Players[CurrentPlayer].strings[0] = 'DirectX' Then
-    smartPlugins := ['d3d9.dll','OpenGL32.dll'];
+  smartPlugins := ['d3d9.dll','OpenGL32.dll'];
   SetupSRL;
 
   If Not IsLoggedIn Then
@@ -1430,7 +1411,8 @@ Begin
   End;
 
   If Not Debug Then
-    DisableSRLDebug:=True;
+    DisableSRLDebug:=True else
+    DisableSRLDebug := false;
   ClearDebug;
 
   If conversationBox.continue(true, true) Then
@@ -1464,7 +1446,7 @@ Begin
     AddOnTerminate('LastRun');
   SetDTM;
 
-    FunctionStop:= 'Setup: Finished';
+  FunctionStop:= 'Setup: Finished';
 
   SMARTImage.Clear;
 End;
